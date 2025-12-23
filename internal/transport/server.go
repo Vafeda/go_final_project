@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"database/sql"
 	"fmt"
 	"github.com/Vafeda/go_final_project/internal/transport/handler"
 	"github.com/Vafeda/go_final_project/tests"
@@ -14,7 +15,7 @@ type Server struct {
 	HTTP http.Server
 }
 
-func Create() (*Server, error) {
+func Create(db *sql.DB) (*Server, error) {
 
 	addr, err := createAddress()
 	if err != nil {
@@ -37,7 +38,7 @@ func Create() (*Server, error) {
 // Стоит сделать логирование
 func createAddress() (string, error) {
 	addr := ":"
-	if todoPort := os.Getenv("TODO_PORT"); len(todoPort) > 0 {
+	if todoPort := os.Getenv("TODO_PORT"); len(todoPort) > 0 { //LookupEnv
 		if len(todoPort) != 4 {
 			// Логирование
 			fmt.Errorf("TODO_PORT must be exactly 4 characters, got %d characters: %s",
