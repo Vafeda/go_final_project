@@ -22,5 +22,5 @@ const (
 	monthLowerBound = 1
 	monthUpperBound = 12
 
-	dateFormat = "20060102"
+	DateFormat = "20060102"
 )

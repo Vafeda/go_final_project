@@ -10,13 +10,11 @@ import (
 func Run() {
 	err := godotenv.Load()
 
-	path := "s"
+	path := "scheduler.db"
 	//val, exist := os.LookupEnv("TODO_DBFILE")
 	//if exist && val != "" {
 	//	path = val
 	//}
-
-	fmt.Println(path)
 	db, err := database.Connect(path)
 	if err != nil {
 		panic(err)

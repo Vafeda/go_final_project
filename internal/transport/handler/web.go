@@ -1,21 +1,30 @@
 package handler
 
-//const webDir string = "go_final_project/web"
-//
-//func webIndex(w http.ResponseWriter, r *http.Request) {
-//	w.Header().Set("Content-Type", "text/html; charset=utf-8")
-//	w.WriteHeader(http.StatusOK)
-//	//w.Write([]byte());
-//}
-//
-//func webJsScripts(w http.ResponseWriter, r *http.Request) {
-//
-//}
-//
-//func webCssStyle(w http.ResponseWriter, r *http.Request) {
-//
-//}
-//
-//func webFavicon(w http.ResponseWriter, r *http.Request) {
-//
-//}
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"path/filepath"
+)
+
+const webDir = "web"
+
+type WebHandler struct {
+	fs http.Handler
+}
+
+func NewWeb() (*WebHandler, error) {
+	if _, err := os.Stat(webDir); os.IsNotExist(err) {
+		return nil, fmt.Errorf("folder at path \"%s\" not found", webDir)
+	}
+	return &WebHandler{fs: http.FileServer(http.Dir(webDir))}, nil
+}
+
+func (wH *WebHandler) Get(w http.ResponseWriter, r *http.Request) {
+	if r.URL.Path == "/" || r.URL.Path == "/index.html" {
+		http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
+		return
+	}
+
+	wH.fs.ServeHTTP(w, r)
+}

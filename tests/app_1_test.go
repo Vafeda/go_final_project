@@ -56,6 +56,8 @@ func walkDir(path string, f func(fname string) error) error {
 }
 
 func TestApp(t *testing.T) {
+	t.Logf("DEBUG: Port from settings = %d", Port)
+	t.Logf("DEBUG: TODO_PORT env = %s", os.Getenv("TODO_PORT"))
 	cmp := func(fname string) error {
 		fbody, err := os.ReadFile(fname)
 		if err != nil {

@@ -3,16 +3,18 @@ package database
 import (
 	"database/sql"
 	"fmt"
-	_ "modernc.org/sqlite"
 	"os"
 	"strings"
+
+	_ "modernc.org/sqlite"
 )
 
 func Connect(dbFile string) (*sql.DB, error) {
-	dbFile = "../../data/" + dbFile
+	dbFile = "data/" + dbFile
 	_, err := os.Stat(dbFile)
 	var migrateDB = false
 	if err != nil {
+		fmt.Println("Create")
 		dbFile, err = createDatabase()
 		if err != nil {
 			return nil, err
