@@ -5,6 +5,5 @@ import (
 )
 
 func main() {
-	//nextdate.Test()
 	app.Run()
 }

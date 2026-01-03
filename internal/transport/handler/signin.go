@@ -61,6 +61,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 			fmt.Println("Аунтификация епта")
 			if !valid {
 				// возвращаем ошибку авторизации 401
+				http.Redirect(w, r, "/login.html", http.StatusFound)
 				http.Error(w, "Authentification required", http.StatusUnauthorized)
 				return
 			}

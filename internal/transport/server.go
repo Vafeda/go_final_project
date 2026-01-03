@@ -5,10 +5,16 @@ import (
 	"fmt"
 	"github.com/Vafeda/go_final_project/internal/transport/handler"
 	"net/http"
+	"os"
 	"strconv"
 	"time"
+)
 
-	"github.com/Vafeda/go_final_project/tests"
+const (
+	DefaultPort = "7540"
+
+	MinPortNum = 1024
+	MaxPortNum = 65535
 )
 
 type Server struct {
@@ -37,31 +43,34 @@ func Create(db *sql.DB) (*Server, error) {
 	return &server, nil
 }
 
-// Стоит сделать логирование
 func createAddress() (string, error) {
-	addr := ":"
-	//if todoPort, exist := os.LookupEnv("TODO_PORT"); exist && len(todoPort) != 0 {
-	//	if len(todoPort) != 4 {
-	//		// Логирование
-	//		fmt.Errorf("TODO_PORT must be exactly 4 characters, got %d characters: %s",
-	//			len(todoPort), todoPort)
-	//		goto exitCondition
-	//	}
-	//
-	//	if _, err := strconv.Atoi(todoPort); err != nil {
-	//		// Логирование
-	//		fmt.Errorf("TODO_PORT must contain only digits: %s", todoPort)
-	//		goto exitCondition
-	//	}
-	//
-	//	addr += todoPort
-	//
-	//	return addr, nil
-	//}
+	var addr string
 
-	//exitCondition:
-
-	addr += strconv.Itoa(tests.Port)
+	port, err := getAddrFromEnvPort()
+	if err != nil {
+		addr = ":" + DefaultPort
+	} else {
+		addr = ":" + port
+	}
 
 	return addr, nil
+}
+
+func getAddrFromEnvPort() (string, error) {
+	todoPort, exist := os.LookupEnv("TODO_PORT")
+	if !exist {
+		return "", fmt.Errorf("TODO_PORT environment variable is not set")
+	}
+
+	port, err := strconv.Atoi(todoPort)
+	if err != nil {
+		return "", fmt.Errorf("TODO_PORT must contain only digits, got: %s", todoPort)
+	}
+
+	if port < MinPortNum || port > MaxPortNum {
+		return "", fmt.Errorf("TODO_PORT value %d is out of valid range (%d-%d)",
+			port, MinPortNum, MaxPortNum)
+	}
+
+	return todoPort, nil
 }
