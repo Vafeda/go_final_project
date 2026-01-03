@@ -1,7 +1,6 @@
 package app
 
 import (
-	"fmt"
 	"github.com/Vafeda/go_final_project/internal/database"
 	"github.com/Vafeda/go_final_project/internal/transport"
 	"github.com/joho/godotenv"
@@ -10,12 +9,7 @@ import (
 func Run() {
 	err := godotenv.Load()
 
-	path := "scheduler.db"
-	//val, exist := os.LookupEnv("TODO_DBFILE")
-	//if exist && val != "" {
-	//	path = val
-	//}
-	db, err := database.Connect(path)
+	db, err := database.Connect("scheduler.db")
 	if err != nil {
 		panic(err)
 	}
@@ -27,7 +21,6 @@ func Run() {
 	}
 
 	if err = srv.HTTP.ListenAndServe(); err != nil {
-		fmt.Println(err)
 		return
 	}
 }

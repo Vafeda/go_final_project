@@ -16,3 +16,15 @@ PS D:\Golang\go_final_project> go test -run ^TestApp$ ./tests
 ok      github.com/Vafeda/go_final_project/tests        0.137s
 PS D:\Golang\go_final_project> go test -run ^TestApp$ -count=1 ./tests
 ok      github.com/Vafeda/go_final_project/tests        0.095s
+
+Задание №2
+Сделано подключение к базе данных. Также два варианта развития с переменной окурежения или без нее. Дефолтный путь к БД
+./data/, так же к этому пути подвязанны и тесты. В функции подключения также присутсвует проверка на наличие переменной
+окружения. Если переменная окружения хранит какой-либо путь, то поиск будет производиться по нему и ошибки, следовательно,
+будут отрабатывать по этому пути.
+
+Результаты тестов (Тесты работаю по пути "../data/scheduler.db"):
+PS D:\Golang\go_final_project> go test -run ^TestDB$ ./tests
+ok      github.com/Vafeda/go_final_project/tests        0.111s
+PS D:\Golang\go_final_project> go test -run ^TestDB$ -count=1 ./tests
+ok      github.com/Vafeda/go_final_project/tests        0.111s

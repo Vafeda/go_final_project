@@ -4,30 +4,51 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 
 	_ "modernc.org/sqlite"
 )
 
+const (
+	EnvTodoDBFile = "TODO_DBFILE"
+
+	DefaultDBDir = "./data/"
+
+	DefaultMigrationPath = "./migrations/scheduler.sql"
+)
+
 func Connect(dbFile string) (*sql.DB, error) {
-	dbFile = "data/" + dbFile
-	_, err := os.Stat(dbFile)
-	var migrateDB = false
+	dbDir, err := getDBDirFromEnv()
 	if err != nil {
-		fmt.Println("Create")
-		dbFile, err = createDatabase()
+		dbDir = DefaultDBDir
+	}
+	dbPath := filepath.Join(dbDir, dbFile)
+
+	if err = os.MkdirAll(dbDir, 0755); err != nil {
+		return nil, fmt.Errorf("failed to create directory %s: %w", dbDir, err)
+	}
+
+	_, err = os.Stat(dbPath)
+	var needMigrateDB = false
+	if err != nil {
+		err = createDatabase(dbPath)
 		if err != nil {
 			return nil, err
 		}
-		migrateDB = true
+		needMigrateDB = true
 	}
 
-	db, err := sql.Open("sqlite", dbFile)
+	db, err := sql.Open("sqlite", dbPath)
 	if err != nil {
 		return nil, err
 	}
-	if migrateDB {
-		migrationDB(db)
+	
+	if needMigrateDB {
+		err = migrationDB(db)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return db, nil
@@ -37,17 +58,18 @@ func Disconnect(db *sql.DB) error {
 	return db.Close()
 }
 
-func createDatabase() (string, error) {
-	_, err := os.Create("data/scheduler.db")
+func createDatabase(dbPath string) error {
+	file, err := os.Create(dbPath)
 	if err != nil {
-		return "", err
+		return fmt.Errorf("failed to create database file: %w", err)
 	}
+	file.Close()
 
-	return "data/scheduler.db", nil
+	return nil
 }
 
 func migrationDB(db *sql.DB) error {
-	content, err := os.ReadFile("./migrations/scheduler.sql")
+	content, err := os.ReadFile(DefaultMigrationPath)
 	if err != nil {
 		return err
 	}
@@ -60,11 +82,25 @@ func migrationDB(db *sql.DB) error {
 			continue
 		}
 
-		_, err := db.Exec(query)
+		_, err = db.Exec(query)
 		if err != nil {
+
 			return fmt.Errorf("execute query %q: %w", query, err)
 		}
 	}
 
 	return nil
+}
+
+func getDBDirFromEnv() (string, error) {
+	todoDBFile, exist := os.LookupEnv(EnvTodoDBFile)
+	if !exist {
+		return "", fmt.Errorf("%s environment variable is not set", EnvTodoDBFile)
+	}
+
+	if todoDBFile == "" {
+		return "", fmt.Errorf("%s is empty", EnvTodoDBFile)
+	}
+
+	return todoDBFile, nil
 }

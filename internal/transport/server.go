@@ -3,14 +3,17 @@ package transport
 import (
 	"database/sql"
 	"fmt"
-	"github.com/Vafeda/go_final_project/internal/transport/handler"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
+
+	"github.com/Vafeda/go_final_project/internal/transport/handler"
 )
 
 const (
+	EnvTodoPort = "TODO_PORT"
+
 	DefaultPort = "7540"
 
 	MinPortNum = 1024
@@ -24,7 +27,6 @@ type Server struct {
 
 func Create(db *sql.DB) (*Server, error) {
 	addr, err := createAddress()
-	fmt.Println(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -57,19 +59,19 @@ func createAddress() (string, error) {
 }
 
 func getAddrFromEnvPort() (string, error) {
-	todoPort, exist := os.LookupEnv("TODO_PORT")
+	todoPort, exist := os.LookupEnv(EnvTodoPort)
 	if !exist {
-		return "", fmt.Errorf("TODO_PORT environment variable is not set")
+		return "", fmt.Errorf("%s environment variable is not set", EnvTodoPort)
 	}
 
 	port, err := strconv.Atoi(todoPort)
 	if err != nil {
-		return "", fmt.Errorf("TODO_PORT must contain only digits, got: %s", todoPort)
+		return "", fmt.Errorf("%s must contain only digits, got: %s", EnvTodoPort, todoPort)
 	}
 
 	if port < MinPortNum || port > MaxPortNum {
-		return "", fmt.Errorf("TODO_PORT value %d is out of valid range (%d-%d)",
-			port, MinPortNum, MaxPortNum)
+		return "", fmt.Errorf("%s value %d is out of valid range (%d-%d)",
+			EnvTodoPort, port, MinPortNum, MaxPortNum)
 	}
 
 	return todoPort, nil
