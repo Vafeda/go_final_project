@@ -19,98 +19,114 @@ func NewTaskService(taskDB *database.TaskDB) *TaskService {
 	}
 }
 
-func (in *TaskService) ReadAll(search string) interface{} {
+func (in *TaskService) ReadAll(search string) (models.Tasks, error) {
 	if search == "" {
 		tasks, err := in.taskDB.ReadAll(10)
 		if err != nil {
-			return models.ErrorResponse{Error: err.Error()}
+			return models.Tasks{}, err
 		}
 
-		return tasks
+		return tasks, nil
 	}
 
 	date, err := time.Parse("02.01.2006", search)
 	if err != nil {
 		tasks, err := in.taskDB.ReadByKeyword(search, 10)
 		if err != nil {
-			return models.ErrorResponse{Error: err.Error()}
+
+			return models.Tasks{}, err
 		}
 
-		return tasks
+		return tasks, nil
 	}
 
 	tasks, err := in.taskDB.ReadByDate(date.Format(nextdate.DateFormat), 10)
 	if err != nil {
-		return models.ErrorResponse{Error: err.Error()}
+		return models.Tasks{}, err
 	}
 
-	return tasks
+	return tasks, nil
 }
 
-func (in *TaskService) Create(task *models.Task) interface{} {
+func (in *TaskService) Create(task *models.Task) (models.TaskCreateResponse, error) {
 	if task.Title == "" {
-		return models.ErrorResponse{Error: "title empty"}
+		return models.TaskCreateResponse{}, fmt.Errorf("title empty")
 	}
 
-	if dateIsValid(task.Date) != nil && task.Date != "" {
-		return models.ErrorResponse{Error: "fail create task. date invalid"}
+	if task.Date != "" && !dateIsValid(task.Date) {
+		return models.TaskCreateResponse{}, fmt.Errorf("fail create task. date invalid")
 	}
 
-	if task.Repeat == "" || task.Date == "" {
+	if task.Repeat == "" || task.Date == "" || task.Date == time.Now().Format(nextdate.DateFormat) {
 		task.Date = time.Now().Format(nextdate.DateFormat)
 	} else {
 		next, err := nextdate.NextDate(time.Now(), task.Date, task.Repeat)
 		if err != nil {
-			return models.ErrorResponse{Error: err.Error()}
+			return models.TaskCreateResponse{}, err
 		}
 		task.Date = next
 	}
 
 	index, err := in.taskDB.Create(task)
 	if err != nil {
-		return models.ErrorResponse{Error: err.Error()}
+		return models.TaskCreateResponse{}, err
 	}
 
-	return models.TaskCreateResponse{ID: index}
+	return models.TaskCreateResponse{ID: index}, nil
 }
 
-func (in *TaskService) Read(id string) interface{} {
+func (in *TaskService) Read(id string) (models.Task, error) {
 	task, err := in.taskDB.Read(id)
-	fmt.Println(task, err)
 	if err != nil {
-		return models.ErrorResponse{Error: err.Error()}
+		return models.Task{}, err
 	}
 
-	return task
+	return task, nil
 }
 
-func (in *TaskService) Update(task *models.Task) interface{} {
+func (in *TaskService) Update(task *models.Task) error {
+	if task.Title == "" {
+		return fmt.Errorf("title empty")
+	}
+
+	if task.Date != "" && !dateIsValid(task.Date) {
+		return fmt.Errorf("fail create task. date invalid")
+	}
+
+	if task.Repeat == "" || task.Date == "" || task.Date == time.Now().Format(nextdate.DateFormat) {
+		task.Date = time.Now().Format(nextdate.DateFormat)
+	} else {
+		_, err := nextdate.NextDate(time.Now(), task.Date, task.Repeat)
+		if err != nil {
+			return err
+		}
+	}
+
 	err := in.taskDB.Update(task)
 	if err != nil {
-		return models.ErrorResponse{Error: err.Error()}
+		return err
 	}
 
-	return models.EmptyJSONResponse{}
+	return nil
 }
 
-func (in *TaskService) Delete(id string) interface{} {
+func (in *TaskService) Delete(id string) error {
 	if id == "" {
-		return models.ErrorResponse{Error: "fail delete task. id is empty"}
+		return fmt.Errorf("fail delete task. id is empty")
 	}
 
 	err := in.taskDB.Delete(id)
 	if err != nil {
-		return models.ErrorResponse{Error: err.Error()}
+		return err
 	}
 
-	return models.EmptyJSONResponse{}
+	return nil
 }
 
-func (in *TaskService) Done(id string) interface{} {
-	response := in.Read(id)
-	task, ok := response.(models.Task)
-	if !ok {
-		return response
+func (in *TaskService) Done(id string) error {
+	task, err := in.Read(id)
+	if err != nil {
+		return err
 	}
 
 	if task.Repeat == "" {
@@ -119,14 +135,14 @@ func (in *TaskService) Done(id string) interface{} {
 
 	date, err := nextdate.NextDate(time.Now(), task.Date, task.Repeat)
 	if err != nil {
-		return models.ErrorResponse{Error: err.Error()}
+		return err
 	}
 
 	task.Date = date
 	return in.Update(&task)
 }
 
-func dateIsValid(date string) error {
+func dateIsValid(date string) bool {
 	_, err := time.Parse(nextdate.DateFormat, date)
-	return err
+	return err == nil
 }

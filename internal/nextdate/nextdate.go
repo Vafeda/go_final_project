@@ -23,11 +23,6 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", fmt.Errorf("invalid repeat rule: %w", err)
 	}
 
-	// Костыль
-	if now.Format(DateFormat) == dstart {
-		return dstart, nil
-	}
-
 	date, err = calculateNextDate(now, date, r)
 	if err != nil {
 		return "", err

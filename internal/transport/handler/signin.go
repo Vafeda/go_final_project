@@ -1,68 +1,76 @@
 package handler
 
 import (
-	"encoding/json"
-	"fmt"
-	"github.com/Vafeda/go_final_project/internal/models"
-	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
+
+	"github.com/Vafeda/go_final_project/internal/models"
+	"github.com/golang-jwt/jwt/v5"
+)
+
+const (
+	EnvTodoPassword = "TODO_PASSWORD"
+
+	jwtKey = "golang"
 )
 
 func signIn(w http.ResponseWriter, r *http.Request) {
-	password := models.Password{}
-
-	if err := json.NewDecoder(r.Body).Decode(&password); err != nil {
-		encodeResponse(w, &models.ErrorResponse{Error: err.Error()})
-		return
-	}
-
-	todoPassword, exist := os.LookupEnv("TODO_PASSWORD")
-	if !exist {
-		return
-	}
-	fmt.Println(password)
-	if password.Password != todoPassword {
-		return
-	}
-
-	key := "anybody"
-	t := jwt.New(jwt.SigningMethodHS256)
-	s, err := t.SignedString([]byte(key))
+	pass, err := decode[models.Password](r)
 	if err != nil {
+		encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 		return
 	}
-	fmt.Println(s)
-	encodeResponse(w, models.JSONToken{Token: s})
+
+	todoPassword, exist := os.LookupEnv(EnvTodoPassword)
+	if !exist {
+		encode(w, http.StatusInternalServerError, models.ErrorResponse{
+			Error: "Server configuration error: TODO_PASSWORD not set",
+		})
+		return
+	}
+
+	if pass.Password != todoPassword {
+		encode(w, http.StatusUnauthorized, models.ErrorResponse{
+			Error: "Invalid password",
+		})
+		return
+	}
+
+	t := jwt.New(jwt.SigningMethodHS256)
+	s, err := t.SignedString([]byte(jwtKey))
+	if err != nil {
+		encode(w, http.StatusInternalServerError, models.ErrorResponse{
+			Error: "Failed to generate token",
+		})
+		return
+	}
+
+	encode(w, http.StatusOK, models.JSONToken{Token: s})
 }
 
 func auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// смотрим наличие пароля
-		pass := os.Getenv("TODO_PASSWORD")
-		if len(pass) > 0 {
-			var Jwt string // JWT-токен из куки
-			// получаем куку
-			cookie, err := r.Cookie("token")
-			if err == nil {
-				Jwt = cookie.Value
-			}
-			var valid bool
-			// здесь код для валидации и проверки JWT-токена
-			// ...
-			s := []byte("anybody")
+		todoPassword, exist := os.LookupEnv(EnvTodoPassword)
+		if !exist {
+			encode(w, http.StatusInternalServerError, models.ErrorResponse{
+				Error: "Server configuration error",
+			})
+			return
+		}
 
-			jwtToken, err := jwt.Parse(Jwt, func(t *jwt.Token) (interface{}, error) {
-				// секретный ключ для всех токенов одинаковый, поэтому просто возвращаем его
-				return s, nil
+		if len(todoPassword) > 0 {
+			cookie, err := r.Cookie("token")
+			if err != nil {
+				http.Redirect(w, r, "/login.html", http.StatusFound)
+				return
+			}
+
+			jwtToken, err := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
+				return []byte(jwtKey), nil
 			})
 
-			valid = jwtToken.Valid
-			fmt.Println("Аунтификация епта")
-			if !valid {
-				// возвращаем ошибку авторизации 401
+			if !jwtToken.Valid {
 				http.Redirect(w, r, "/login.html", http.StatusFound)
-				http.Error(w, "Authentification required", http.StatusUnauthorized)
 				return
 			}
 		}

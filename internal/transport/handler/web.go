@@ -7,7 +7,9 @@ import (
 	"path/filepath"
 )
 
-const webDir = "web"
+const (
+	webDir = "web"
+)
 
 type WebHandler struct {
 	fs http.Handler

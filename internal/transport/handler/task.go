@@ -3,10 +3,14 @@ package handler
 import (
 	"fmt"
 	"net/http"
-	"reflect"
 
 	"github.com/Vafeda/go_final_project/internal/models"
 	"github.com/Vafeda/go_final_project/internal/services"
+)
+
+const (
+	keySearch = "search"
+	keyId     = "id"
 )
 
 type TaskHandler struct {
@@ -19,47 +23,83 @@ func NewTaskHandler(taskService *services.TaskService) *TaskHandler {
 	}
 }
 
-func (in *TaskHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
-	search := r.FormValue("search")
-	encodeResponse(w, in.taskService.ReadAll(search))
-}
-
 func (in *TaskHandler) Create(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
-
-	if !decodeSuccess(w, r, &task) {
+	task, err := decode[models.Task](r)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	encodeResponse(w, in.taskService.Create(&task))
+	taskResponse, err := in.taskService.Create(&task)
+	fmt.Println(taskResponse, err)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = encode(w, http.StatusCreated, taskResponse)
 }
 
 func (in *TaskHandler) Read(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
-	// "Если id пустой это жопа"
-	fmt.Printf("Тип: %v\n", reflect.TypeOf(in.taskService.Read(id)))
-	fmt.Println(in.taskService.Read(id))
-	encodeResponse(w, in.taskService.Read(id))
-}
+	id := r.FormValue(keyId)
 
-func (in *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var task models.Task
-
-	if !decodeSuccess(w, r, &task) {
+	task, err := in.taskService.Read(id)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 		return
 	}
 
-	encodeResponse(w, in.taskService.Update(&task))
+	err = encode(w, http.StatusOK, task)
+}
+
+func (in *TaskHandler) Update(w http.ResponseWriter, r *http.Request) {
+	task, err := decode[models.Task](r)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = in.taskService.Update(&task)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = encode(w, http.StatusOK, models.EmptyJSONResponse{})
 }
 
 func (in *TaskHandler) Delete(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
+	id := r.FormValue(keyId)
 
-	encodeResponse(w, in.taskService.Delete(id))
+	err := in.taskService.Delete(id)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = encode(w, http.StatusOK, models.EmptyJSONResponse{})
+}
+
+func (in *TaskHandler) ReadAll(w http.ResponseWriter, r *http.Request) {
+	search := r.FormValue(keySearch)
+
+	tasks, err := in.taskService.ReadAll(search)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = encode(w, http.StatusOK, tasks)
 }
 
 func (in *TaskHandler) Done(w http.ResponseWriter, r *http.Request) {
-	id := r.FormValue("id")
+	id := r.FormValue(keyId)
 
-	encodeResponse(w, in.taskService.Done(id))
+	err := in.taskService.Done(id)
+	if err != nil {
+		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
+		return
+	}
+
+	err = encode(w, http.StatusOK, models.EmptyJSONResponse{})
 }
