@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Vafeda/go_final_project/internal/database"
-	"github.com/Vafeda/go_final_project/internal/services"
+	"github.com/Vafeda/TODO-List/internal/database"
+	"github.com/Vafeda/TODO-List/internal/services"
 )
 
 func SetupRoutes(db *sql.DB) *http.ServeMux {

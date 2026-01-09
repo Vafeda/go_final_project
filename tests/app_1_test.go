@@ -26,11 +26,25 @@ func getURL(path string) string {
 }
 
 func getBody(path string) ([]byte, error) {
-	resp, err := http.Get(getURL(path))
+	req, err := http.NewRequest("GET", getURL(path), nil)
+	if err != nil {
+		return nil, err
+	}
+
+	if Token != "" {
+		req.AddCookie(&http.Cookie{
+			Name:  "token",
+			Value: Token,
+		})
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
 	body, err := io.ReadAll(resp.Body)
 	return body, err
 }

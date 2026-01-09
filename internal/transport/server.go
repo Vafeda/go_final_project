@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Vafeda/go_final_project/internal/transport/handler"
+	"github.com/Vafeda/TODO-List/internal/transport/handler"
 )
 
 const (

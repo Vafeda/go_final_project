@@ -1,11 +1,13 @@
 package handler
 
 import (
+	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"net/http"
 	"os"
+	"strings"
 
-	"github.com/Vafeda/go_final_project/internal/models"
-	"github.com/golang-jwt/jwt/v5"
+	"github.com/Vafeda/TODO-List/internal/models"
 )
 
 const (
@@ -50,30 +52,51 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 
 func auth(next http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		todoPassword, exist := os.LookupEnv(EnvTodoPassword)
-		if !exist {
-			encode(w, http.StatusInternalServerError, models.ErrorResponse{
-				Error: "Server configuration error",
-			})
+		if r.URL.Path == "/login.html" {
+			fmt.Println(r.URL.Path)
+			next(w, r)
 			return
 		}
 
-		if len(todoPassword) > 0 {
-			cookie, err := r.Cookie("token")
-			if err != nil {
-				http.Redirect(w, r, "/login.html", http.StatusFound)
-				return
-			}
-
-			jwtToken, err := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
-				return []byte(jwtKey), nil
-			})
-
-			if !jwtToken.Valid {
-				http.Redirect(w, r, "/login.html", http.StatusFound)
-				return
-			}
+		todoPassword, exist := os.LookupEnv(EnvTodoPassword)
+		if !exist || strings.TrimSpace(todoPassword) == "" {
+			next(w, r)
+			return
 		}
+
+		cookie, err := r.Cookie("token")
+		if err != nil {
+			fmt.Println("Redirect 1")
+			if r.Header.Get("X-Requested-With") == "XMLHttpRequest" ||
+				strings.Contains(r.Header.Get("Accept"), "application/json") ||
+				strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+				w.WriteHeader(http.StatusUnauthorized)
+				encode(w, http.StatusUnauthorized, models.ErrorResponse{Error: "Unauthorized"})
+				return
+			}
+
+			http.Redirect(w, r, "/login.html", http.StatusFound)
+			return
+		}
+
+		jwtToken, err := jwt.Parse(cookie.Value, func(t *jwt.Token) (interface{}, error) {
+			return []byte(jwtKey), nil
+		})
+
+		if !jwtToken.Valid {
+			fmt.Println("Redirect 2")
+			if r.Header.Get("X-Requested-With") == "XMLHttpRequest" ||
+				strings.Contains(r.Header.Get("Accept"), "application/json") ||
+				strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
+				w.WriteHeader(http.StatusUnauthorized)
+				encode(w, http.StatusUnauthorized, models.ErrorResponse{Error: "Unauthorized"})
+				return
+			}
+			
+			http.Redirect(w, r, "/login.html", http.StatusFound)
+			return
+		}
+
 		next(w, r)
 	})
 }

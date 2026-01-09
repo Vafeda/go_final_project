@@ -1,9 +1,11 @@
 package app
 
 import (
-	"github.com/Vafeda/go_final_project/internal/database"
-	"github.com/Vafeda/go_final_project/internal/transport"
+	"fmt"
 	"github.com/joho/godotenv"
+
+	"github.com/Vafeda/TODO-List/internal/database"
+	"github.com/Vafeda/TODO-List/internal/transport"
 )
 
 func Run() {
@@ -19,7 +21,8 @@ func Run() {
 	if err != nil {
 		panic(err)
 	}
-
+	
+	fmt.Printf("Serving on port %s\n", srv.HTTP.Addr)
 	if err = srv.HTTP.ListenAndServe(); err != nil {
 		return
 	}

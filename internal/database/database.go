@@ -11,11 +11,14 @@ import (
 )
 
 const (
-	EnvTodoDBFile = "TODO_DBFILE"
+	EnvTodoDBFile     = "TODO_DBFILE"
+	EnvTodoDBTestData = "TODO_DBTESTDATA"
 
 	DefaultDBDir = "./data/"
 
 	DefaultMigrationPath = "./migrations/scheduler.sql"
+
+	TestDataPath = "./migrations/test_data.sql"
 )
 
 func Connect(dbFile string) (*sql.DB, error) {
@@ -43,9 +46,16 @@ func Connect(dbFile string) (*sql.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	if needMigrateDB {
 		err = migrationDB(db)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if needSeedingDB() {
+		err = seedDB(db)
 		if err != nil {
 			return nil, err
 		}
@@ -70,6 +80,35 @@ func createDatabase(dbPath string) error {
 
 func migrationDB(db *sql.DB) error {
 	content, err := os.ReadFile(DefaultMigrationPath)
+	if err != nil {
+		return err
+	}
+
+	queries := strings.Split(string(content), ";")
+
+	for _, query := range queries {
+		query = strings.TrimSpace(query)
+		if query == "" {
+			continue
+		}
+
+		_, err = db.Exec(query)
+		if err != nil {
+
+			return fmt.Errorf("execute query %q: %w", query, err)
+		}
+	}
+
+	return nil
+}
+
+func needSeedingDB() bool {
+	todoDBTestData, exist := os.LookupEnv(EnvTodoDBTestData)
+	return exist && todoDBTestData == "true"
+}
+
+func seedDB(db *sql.DB) error {
+	content, err := os.ReadFile(TestDataPath)
 	if err != nil {
 		return err
 	}

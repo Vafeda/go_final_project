@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/Vafeda/go_final_project/internal/models"
-	"github.com/Vafeda/go_final_project/internal/services"
+	"github.com/Vafeda/TODO-List/internal/models"
+	"github.com/Vafeda/TODO-List/internal/services"
 )
 
 const (

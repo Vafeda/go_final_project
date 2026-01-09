@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Vafeda/go_final_project/internal/models"
-	"github.com/Vafeda/go_final_project/internal/nextdate"
+	"github.com/Vafeda/TODO-List/internal/models"
+	"github.com/Vafeda/TODO-List/internal/nextdate"
 )
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {

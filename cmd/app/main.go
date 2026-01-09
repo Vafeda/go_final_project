@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/Vafeda/go_final_project/internal/app"
+	"github.com/Vafeda/TODO-List/internal/app"
 )
 
 func main() {

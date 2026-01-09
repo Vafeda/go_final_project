@@ -1,4 +1,4 @@
-module github.com/Vafeda/go_final_project
+module github.com/Vafeda/TODO-List
 
 go 1.24.11
 

@@ -24,7 +24,9 @@ func NewWeb() (*WebHandler, error) {
 
 func (wH *WebHandler) Get(w http.ResponseWriter, r *http.Request) {
 	if r.URL.Path == "/" || r.URL.Path == "/index.html" {
-		http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
+		auth(func(w http.ResponseWriter, r *http.Request) {
+			http.ServeFile(w, r, filepath.Join(webDir, "index.html"))
+		})(w, r)
 		return
 	}
 

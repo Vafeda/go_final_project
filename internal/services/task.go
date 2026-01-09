@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Vafeda/go_final_project/internal/database"
-	"github.com/Vafeda/go_final_project/internal/models"
-	"github.com/Vafeda/go_final_project/internal/nextdate"
+	"github.com/Vafeda/TODO-List/internal/database"
+	"github.com/Vafeda/TODO-List/internal/models"
+	"github.com/Vafeda/TODO-List/internal/nextdate"
 )
 
 type TaskService struct {
