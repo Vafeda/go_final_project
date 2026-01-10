@@ -16,8 +16,8 @@ COPY --from=builder /app/todo-app /app/todo-app
 COPY ./web /app/web
 COPY ./migrations /app/migrations
 
-ENV TODO_PORT=8081
-ENV TODO_DBFILE="./day/"
+ENV TODO_PORT=7000
+ENV TODO_DBFILE="./data/"
 ENV TODO_PASSWORD="12345"
 
 CMD ["/app/todo-app"]
