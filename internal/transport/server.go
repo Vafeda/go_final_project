@@ -3,8 +3,8 @@ package transport
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Vafeda/TODO-List/internal/env"
 	"net/http"
-	"os"
 	"strconv"
 	"time"
 
@@ -15,25 +15,22 @@ const (
 	EnvTodoPort = "TODO_PORT"
 
 	DefaultPort = "7540"
-
-	MinPortNum = 1024
-	MaxPortNum = 65535
 )
 
 type Server struct {
-	DB   *sql.DB
-	HTTP http.Server
+	db   *sql.DB
+	http http.Server
 }
 
-func Create(db *sql.DB) (*Server, error) {
+func NewServer(db *sql.DB) *Server {
 	addr, err := createAddress()
 	if err != nil {
-		return nil, err
+		return nil
 	}
 
 	server := Server{
-		DB: db,
-		HTTP: http.Server{
+		db: db,
+		http: http.Server{
 			Addr:         addr,
 			Handler:      handler.SetupRoutes(db),
 			ReadTimeout:  5 * time.Second,
@@ -42,7 +39,14 @@ func Create(db *sql.DB) (*Server, error) {
 		},
 	}
 
-	return &server, nil
+	return &server
+}
+
+func (s *Server) Start() {
+	fmt.Printf("Serving on port %s\n", s.http.Addr)
+	if err := s.http.ListenAndServe(); err != nil {
+		return
+	}
 }
 
 func createAddress() (string, error) {
@@ -59,19 +63,14 @@ func createAddress() (string, error) {
 }
 
 func getAddrFromEnvPort() (string, error) {
-	todoPort, exist := os.LookupEnv(EnvTodoPort)
+	todoPort, exist := env.Dict[EnvTodoPort]
 	if !exist {
 		return "", fmt.Errorf("%s environment variable is not set", EnvTodoPort)
 	}
 
-	port, err := strconv.Atoi(todoPort)
+	_, err := strconv.Atoi(todoPort)
 	if err != nil {
 		return "", fmt.Errorf("%s must contain only digits, got: %s", EnvTodoPort, todoPort)
-	}
-
-	if port < MinPortNum || port > MaxPortNum {
-		return "", fmt.Errorf("%s value %d is out of valid range (%d-%d)",
-			EnvTodoPort, port, MinPortNum, MaxPortNum)
 	}
 
 	return todoPort, nil

@@ -2,9 +2,9 @@ package handler
 
 import (
 	"fmt"
+	"github.com/Vafeda/TODO-List/internal/env"
 	"github.com/golang-jwt/jwt/v5"
 	"net/http"
-	"os"
 	"strings"
 
 	"github.com/Vafeda/TODO-List/internal/models"
@@ -23,7 +23,7 @@ func signIn(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	todoPassword, exist := os.LookupEnv(EnvTodoPassword)
+	todoPassword, exist := env.Dict[EnvTodoPassword]
 	if !exist {
 		encode(w, http.StatusInternalServerError, models.ErrorResponse{
 			Error: "Server configuration error: TODO_PASSWORD not set",
@@ -58,7 +58,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		todoPassword, exist := os.LookupEnv(EnvTodoPassword)
+		todoPassword, exist := env.Dict[EnvTodoPassword]
 		if !exist || strings.TrimSpace(todoPassword) == "" {
 			next(w, r)
 			return
@@ -66,7 +66,6 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 
 		cookie, err := r.Cookie("token")
 		if err != nil {
-			fmt.Println("Redirect 1")
 			if r.Header.Get("X-Requested-With") == "XMLHttpRequest" ||
 				strings.Contains(r.Header.Get("Accept"), "application/json") ||
 				strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
@@ -84,7 +83,6 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 		})
 
 		if !jwtToken.Valid {
-			fmt.Println("Redirect 2")
 			if r.Header.Get("X-Requested-With") == "XMLHttpRequest" ||
 				strings.Contains(r.Header.Get("Accept"), "application/json") ||
 				strings.HasPrefix(r.Header.Get("Content-Type"), "application/json") {
@@ -92,7 +90,7 @@ func auth(next http.HandlerFunc) http.HandlerFunc {
 				encode(w, http.StatusUnauthorized, models.ErrorResponse{Error: "Unauthorized"})
 				return
 			}
-			
+
 			http.Redirect(w, r, "/login.html", http.StatusFound)
 			return
 		}

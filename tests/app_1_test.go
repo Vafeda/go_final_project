@@ -31,12 +31,10 @@ func getBody(path string) ([]byte, error) {
 		return nil, err
 	}
 
-	if Token != "" {
-		req.AddCookie(&http.Cookie{
-			Name:  "token",
-			Value: Token,
-		})
-	}
+	req.AddCookie(&http.Cookie{
+		Name:  "token",
+		Value: Token,
+	})
 
 	client := &http.Client{}
 	resp, err := client.Do(req)
@@ -70,8 +68,6 @@ func walkDir(path string, f func(fname string) error) error {
 }
 
 func TestApp(t *testing.T) {
-	t.Logf("DEBUG: Port from settings = %d", Port)
-	t.Logf("DEBUG: TODO_PORT env = %s", os.Getenv("TODO_PORT"))
 	cmp := func(fname string) error {
 		fbody, err := os.ReadFile(fname)
 		if err != nil {

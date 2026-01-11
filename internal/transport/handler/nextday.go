@@ -9,7 +9,7 @@ import (
 )
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {
-	now, err := time.Parse("20060102", r.FormValue("now"))
+	now, err := time.Parse(nextdate.DateFormat, r.FormValue("now"))
 	if err != nil {
 		err = encode(w, http.StatusBadRequest, models.ErrorResponse{Error: err.Error()})
 		return
@@ -22,5 +22,8 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusOK)
-	w.Write([]byte(date))
+	_, err = w.Write([]byte(date))
+	if err != nil {
+		err = encode(w, http.StatusInternalServerError, models.ErrorResponse{Error: err.Error()})
+	}
 }

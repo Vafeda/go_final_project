@@ -3,6 +3,7 @@ package database
 import (
 	"database/sql"
 	"fmt"
+	"github.com/Vafeda/TODO-List/internal/env"
 	"os"
 	"path/filepath"
 	"strings"
@@ -64,7 +65,7 @@ func Connect(dbFile string) (*sql.DB, error) {
 	return db, nil
 }
 
-func Disconnect(db *sql.DB) error {
+func Close(db *sql.DB) error {
 	return db.Close()
 }
 
@@ -103,7 +104,7 @@ func migrationDB(db *sql.DB) error {
 }
 
 func needSeedingDB() bool {
-	todoDBTestData, exist := os.LookupEnv(EnvTodoDBTestData)
+	todoDBTestData, exist := env.Dict[EnvTodoDBTestData]
 	return exist && todoDBTestData == "true"
 }
 
@@ -132,7 +133,7 @@ func seedDB(db *sql.DB) error {
 }
 
 func getDBDirFromEnv() (string, error) {
-	todoDBFile, exist := os.LookupEnv(EnvTodoDBFile)
+	todoDBFile, exist := env.Dict[EnvTodoDBFile]
 	if !exist {
 		return "", fmt.Errorf("%s environment variable is not set", EnvTodoDBFile)
 	}

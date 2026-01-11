@@ -18,7 +18,7 @@ func NewTaskDB(db *sql.DB) *TaskDB {
 }
 
 func (t *TaskDB) ReadAll(limit int) (models.Tasks, error) {
-	rows, err := t.db.Query("SELECT * FROM scheduler ORDER BY DATE LIMIT $1", limit)
+	rows, err := t.db.Query("SELECT id, date, title, comment, repeat FROM scheduler ORDER BY DATE LIMIT $1", limit)
 	if err != nil {
 		return models.Tasks{}, err
 	}
@@ -42,7 +42,7 @@ func (t *TaskDB) ReadAll(limit int) (models.Tasks, error) {
 }
 
 func (t *TaskDB) ReadByDate(date string, limit int) (models.Tasks, error) {
-	rows, err := t.db.Query("SELECT * FROM scheduler WHERE date = $1 LIMIT $1", date, limit)
+	rows, err := t.db.Query("SELECT id, date, title, comment, repeat FROM scheduler WHERE date = $1 LIMIT $1", date, limit)
 	if err != nil {
 		return models.Tasks{}, err
 	}
@@ -66,7 +66,7 @@ func (t *TaskDB) ReadByDate(date string, limit int) (models.Tasks, error) {
 }
 
 func (t *TaskDB) ReadByKeyword(key string, limit int) (models.Tasks, error) {
-	rows, err := t.db.Query("SELECT * FROM scheduler WHERE title LIKE $1 OR comment LIKE $1 ORDER BY date LIMIT $2", key, limit)
+	rows, err := t.db.Query("SELECT id, date, title, comment, repeat FROM scheduler WHERE title LIKE $1 OR comment LIKE $1 ORDER BY date LIMIT $2", key, limit)
 	if err != nil {
 		return models.Tasks{}, err
 	}
