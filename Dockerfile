@@ -8,7 +8,7 @@ RUN go mod download
 COPY . .
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o todo-app ./cmd/app/main.go
 
-FROM ubuntu:alpine
+FROM alpine:latest
 
 WORKDIR /app
 
